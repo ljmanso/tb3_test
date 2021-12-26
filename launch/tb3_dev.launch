@@ -1,0 +1,48 @@
+<launch>
+
+
+
+  <!-- Arguments -->
+  <!-- <arg name="map_file" default="$(find tb3_test)/src/maps/tb3_house_map.yaml" /> -->
+  <arg name="map_file" default="$(find tb3_test)/maps/tb3_house_empty.yaml" />
+  <arg name="model" value="waffle"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+  <arg name="odom_topic" default="odom" />
+
+
+  <include file="$(find tb3_test)/launch/my_turtlebot3.launch" />
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
+    <arg name="model" value="$(arg model)" />
+  </include>  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+  <include file="$(find turtlebot3_navigation)/launch/amcl.launch">
+    <arg name="initial_pose_x" default="-3.0"/>
+    <arg name="initial_pose_y" default="1.2"/>
+    <arg name="initial_pose_a" default="0.0"/>
+  </include>
+
+  <!-- move_base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    <!--
+    <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
+    -->
+    <rosparam file="$(find tb3_test)/cfg/costmap_common_params_waffle.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find tb3_test)/cfg/costmap_common_params_waffle.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find tb3_test)/cfg/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find tb3_test)/cfg/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find tb3_test)/cfg/move_base_params.yaml" command="load" />
+    <rosparam file="$(find tb3_test)/cfg/base_local_planner_params.yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+  </node>
+
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d /home/ljmanso/catkin_ws/src/tb3_test/rviz/navigation5.rviz"/>
+  </group>
+
+
+</launch>
+
